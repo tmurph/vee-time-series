@@ -1,0 +1,53 @@
+#+TITLE: Regression Analysis Fall 2012
+#+AUTHOR: Trevor Murphy
+#+EMAIL: trevor.m.murphy+vee@gmail.com
+
+#+OPTIONS: num:nil toc:nil
+
+* Source Code							   :noexport:
+:PROPERTIES:
+:cache: yes
+:END:
+
+Evaluate this code block to update the report.
+#+BEGIN_SRC sh :results silent
+  make Makefile
+  make
+#+END_SRC
+
+** Makefile
+:PROPERTIES:
+:eval:     never
+:END:
+
+#+NAME: grab-google-ngrams
+#+BEGIN_SRC makefile :tangle yes
+  .RECIPEPREFIX = >
+  .DELETE_ON_ERROR :
+  .PRECIOUS : 
+  .PHONY : clean
+  .DEFAULT : all
+  
+  all :
+  
+  clean :
+  
+  Makefile : ngrams.org
+  > emacs -Q --batch --visit=ngrams.org --eval "(progn \
+  (require 'org) \
+  (require 'org-exp) \
+  (require 'ob) \
+  (require 'ob-tangle) \
+  (re-search-forward \"^[ \\t]*#\\\\+begin_src[^\\n]*$@\") \
+  (org-babel-tangle t))"
+  > mv -f ngrams.makefile Makefile
+#+END_SRC
+
+* File Local Variables						   :noexport:
+
+# Local Variables:
+# fill-column: 80
+# org-confirm-babel-evaluate: nil
+# End:
+
+* Footnotes
