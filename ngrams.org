@@ -4,6 +4,12 @@
 
 #+OPTIONS: num:nil toc:nil
 
+#+BEGIN_LaTeX
+  \begin{abstract}
+    We look at ngram data from Google's (US) English book datasets.
+  \end{abstract}
+#+END_LaTeX
+
 * Source Code							   :noexport:
 :PROPERTIES:
 :cache: yes
@@ -28,9 +34,15 @@ Evaluate this code block to update the report.
   .PHONY : clean
   .DEFAULT : all
   
-  all :
+  datafiles := googlebooks-eng-us-all-1gram-20120701-b googlebooks-eng-us-all-1gram-20120701-m googlebooks-eng-us-all-2gram-20120701-be
+  
+  all : $(datafiles)
   
   clean :
+  
+  $(datafiles) :
+  > curl -C - -O http://storage.googleapis.com/books/ngrams/books/$@.gz
+  > gunzip $@.gz
   
   Makefile : ngrams.org
   > emacs -Q --batch --visit=ngrams.org --eval "(progn \
