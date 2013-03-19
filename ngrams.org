@@ -31,14 +31,17 @@ Evaluate this code block to update the report.
   .RECIPEPREFIX = >
   .DELETE_ON_ERROR :
   .PRECIOUS : 
-  .PHONY : clean
+  .PHONY : all clean
   .DEFAULT : all
   
   datafiles := googlebooks-eng-us-all-1gram-20120701-b googlebooks-eng-us-all-1gram-20120701-m googlebooks-eng-us-all-2gram-20120701-be
   
-  all : $(datafiles)
+  all : beard-data-short
   
   clean :
+  
+  beard-data-short : googlebooks-eng-us-all-1gram-20120701-b
+  > grep -E -i '^beards?[_         ]' $< > $@
   
   $(datafiles) :
   > curl -C - -O http://storage.googleapis.com/books/ngrams/books/$@.gz
