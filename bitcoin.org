@@ -1,0 +1,94 @@
+#+TITLE: Regression Analysis Fall 2012
+#+AUTHOR: Trevor Murphy
+#+EMAIL: trevor.m.murphy+vee@gmail.com
+
+#+OPTIONS: num:nil toc:nil
+
+\begin{abstract}
+  We look at bitcoin trading data from the Mt Gox bitcoin exchange.
+\end{abstract}
+
+* Source Code							   :noexport:
+:PROPERTIES:
+:cache: yes
+:END:
+
+Evaluate this code block to update the report.
+#+BEGIN_SRC sh :results silent
+  make Makefile
+  make
+#+END_SRC
+
+** Makefile
+:PROPERTIES:
+:eval:     never
+:END:
+
+#+NAME: grab-google-ngrams
+#+BEGIN_SRC makefile :tangle yes
+  .RECIPEPREFIX = >
+  .DELETE_ON_ERROR :
+  .PRECIOUS : 
+  .PHONY : all clean
+  .DEFAULT : all
+  
+  datafiles := bitcoincharts-mtgox-0-1357016400-trades.csv
+  
+  all : bitcoincharts-mtgox-0-1357016400-trades.csv
+  
+  clean :
+  
+  $(datafiles) :
+  > curl -C - "http://bitcoincharts.com/t/trades.csv?symbol=mtgox&start=0&end=1357016400" -o $@
+  
+  Makefile : bitcoin.org
+  > emacs -Q --batch --visit=bitcoin.org --eval "(progn \
+  (require 'org) \
+  (require 'org-exp) \
+  (require 'ob) \
+  (require 'ob-tangle) \
+  (re-search-forward \"^[ \\t]*#\\\\+begin_src[^\\n]*$@\") \
+  (org-babel-tangle t))"
+  > mv -f bitcoin.makefile Makefile
+#+END_SRC
+
+** Python
+:PROPERTIES:
+:session:  *Python-Bitcoin*
+:END:
+
+#+NAME: declare-imports
+#+BEGIN_SRC python
+  # # Boo, import Axes3D.  This is some object that pieces of the pyplot
+  # # module need to know about for 3D plotting.  But pyplot can't find it
+  # # by itself.  Needs some handholding - a/k/a a pointless object in the
+  # # global namespace.  Bad, bad, matplotlib.  Not Pythonic.  No biscuit.
+  # from mpl_toolkits.mplot3d import Axes3D
+  from matplotlib import pyplot
+  # from matplotlib import colors
+  # from matplotlib import cm
+  # from scipy import stats
+  import numpy
+  # import math
+#+END_SRC
+
+#+RESULTS[fbc2892703260f17e01323e0b42381f9993f7473]: declare-imports
+
+#+NAME: get-raw-data-array
+#+BEGIN_SRC python :var filename="bitcoincharts-mtgox-0-1357016400-trades.csv"
+  
+  # Read in lines from the data file.
+  with open(filename, "r") as f:
+      raw_data = (line.strip().split(",") for line in f)
+      # Convert numbers.
+      data = numpy.array(list(raw_data), dtype=float)
+#+END_SRC
+
+* File Local Variables						   :noexport:
+
+# Local Variables:
+# fill-column: 80
+# org-confirm-babel-evaluate: nil
+# End:
+
+* Footnotes
