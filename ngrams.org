@@ -58,6 +58,50 @@ Evaluate this code block to update the report.
   > mv -f ngrams.makefile Makefile
 #+END_SRC
 
+** Python
+:PROPERTIES:
+:session:  *Python-Ngrams*
+:END:
+
+#+NAME: declare-imports
+#+BEGIN_SRC python
+  # # Boo, import Axes3D.  This is some object that pieces of the pyplot
+  # # module need to know about for 3D plotting.  But pyplot can't find it
+  # # by itself.  Needs some handholding - a/k/a a pointless object in the
+  # # global namespace.  Bad, bad, matplotlib.  Not Pythonic.  No biscuit.
+  # from mpl_toolkits.mplot3d import Axes3D
+  # from matplotlib import pyplot
+  # from matplotlib import colors
+  # from matplotlib import cm
+  # from scipy import stats
+  import numpy
+  # import math
+  from itertools import groupby
+#+END_SRC
+
+#+RESULTS[73e6796e1509ab1c2e4ab21d5ad7fd3c960dd8fc]: declare-imports
+
+#+NAME: get-raw-data-short-beard-array
+#+BEGIN_SRC python
+  
+  # Read in lines from the data file.
+  with open("beard-data-short", "r") as f:
+      raw_data = (line.strip().split("\t") for line in f)
+      # Remember that the data lines come in the following order:
+      NGRAM, YEAR, COUNT, BOOKS = 0, 1, 2, 3
+      # Convert count to integers.
+      formatted_data = ([n, int(y), int(c), int(b)] for [n, y, c, b] in raw_data)
+      # Sort and group on ngram.
+      # Pick out just the year and total count for analysis.
+      keyfunc = lambda lst: lst[NGRAM]
+      sorted_data = sorted(formatted_data, key=keyfunc)
+      data = {}
+      for key, group in groupby(sorted_data, keyfunc):
+          data[key] = numpy.array([[lst[YEAR], lst[COUNT]] for lst in group], dtype=int)
+#+END_SRC
+
+#+RESULTS[13ef4fd8965fc3df36baeed2e122578a0ca8eeb4]: get-raw-data-short-beard-array
+
 * File Local Variables						   :noexport:
 
 # Local Variables:
