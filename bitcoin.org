@@ -4,9 +4,54 @@
 
 #+OPTIONS: num:nil toc:nil
 
-\begin{abstract}
-  We look at bitcoin trading data from the Mt Gox bitcoin exchange.
-\end{abstract}
+#+BEGIN_SRC latex
+  \begin{abstract}
+    We look at bitcoin trading data from the Mt Gox bitcoin exchange.
+  \end{abstract}
+#+END_SRC
+
+* Introduction
+
+Time series analysis can be helpful, I suppose. Perhaps it can tell us something
+interesting about currencies?
+
+Bitcoin is a fake currency that the internet invented. Despite that, it seems to
+be doing something significant. Let's see.
+
+* Data and Analysis
+
+Mt Gox is an online bitcoin exchange, trading in various currencies from around
+the world.  For various reasons, they make their trading data available for
+analysis.
+
+Bitcoincharts summarizes this data in a convenient format.
+
+** Data Description
+
+The data obtained from bitcoincharts gives basic trading info, in the following
+format:
+
+unixtime, price, amount
+
+Here's some sample trades.
+
+** Analysis with Python
+
+Python is pretty sweet.  I'm not sure what to do for time series analysis, since
+that's boring, but I'll bet I can pull off something cool.
+
+** Model
+
+We settled with an AR(1) model ... or maybe MA(2) I dunno.  Here are some graphs
+that show what's up.
+
+* Conclusion
+
+As you can see ... nothing.  Time series is terrible.
+
+* Appendix
+
+Maybe ... if you want some stuff it's here.
 
 * Source Code							   :noexport:
 :PROPERTIES:
