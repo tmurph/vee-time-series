@@ -64,25 +64,29 @@ Evaluate this code block to update the report.
   # # by itself.  Needs some handholding - a/k/a a pointless object in the
   # # global namespace.  Bad, bad, matplotlib.  Not Pythonic.  No biscuit.
   # from mpl_toolkits.mplot3d import Axes3D
-  from matplotlib import pyplot
+  # from matplotlib import pyplot
   # from matplotlib import colors
   # from matplotlib import cm
   # from scipy import stats
-  import numpy
+  # import numpy
+  import pandas
   # import math
+  from datetime import datetime
 #+END_SRC
 
-#+RESULTS[fbc2892703260f17e01323e0b42381f9993f7473]: declare-imports
+#+RESULTS[2ec09ac4acc781ef1a60461e60520219b1315a48]: declare-imports
 
 #+NAME: get-raw-data-array
 #+BEGIN_SRC python :var filename="bitcoincharts-mtgox-0-1357016400-trades.csv"
   
   # Read in lines from the data file.
-  with open(filename, "r") as f:
-      raw_data = (line.strip().split(",") for line in f)
-      # Convert numbers.
-      data = numpy.array(list(raw_data), dtype=float)
+  parse = lambda x: datetime.fromtimestamp(int(x))
+  data = pandas.read_csv(filename, names=['unixtime', 'price', 'amount'],
+                         index_col='unixtime', date_parser=parse)
 #+END_SRC
+
+#+RESULTS[ccb0778bb6537947c8175c14485cf8c1ee808cb3]: get-raw-data-array
+
 
 * File Local Variables						   :noexport:
 
