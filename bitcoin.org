@@ -107,22 +107,24 @@ Evaluate this code block to update the report.
 
 #+NAME: declare-imports
 #+BEGIN_SRC python
+  
   # # Boo, import Axes3D.  This is some object that pieces of the pyplot
   # # module need to know about for 3D plotting.  But pyplot can't find it
   # # by itself.  Needs some handholding - a/k/a a pointless object in the
   # # global namespace.  Bad, bad, matplotlib.  Not Pythonic.  No biscuit.
   # from mpl_toolkits.mplot3d import Axes3D
-  # from matplotlib import pyplot
+  from matplotlib import pyplot
   # from matplotlib import colors
   # from matplotlib import cm
   # from scipy import stats
   # import numpy
   import pandas
+  from pandas.tools.plotting import autocorrelation_plot
   # import math
   from datetime import datetime
 #+END_SRC
 
-#+RESULTS[2ec09ac4acc781ef1a60461e60520219b1315a48]: declare-imports
+#+RESULTS[4821df35a8ba49af9f0af5cf7112d1245c733868]: declare-imports
 
 #+NAME: get-raw-data-array
 #+BEGIN_SRC python :var filename="data/bitcoincharts-mtgoxUSD-0-1357016400-trades.csv"
@@ -131,10 +133,42 @@ Evaluate this code block to update the report.
   parse = lambda x: datetime.fromtimestamp(int(x))
   data = pandas.read_csv(filename, names=['unixtime', 'price', 'amount'],
                          index_col='unixtime', date_parser=parse)
+  
+  # Add total value of a trade = price * volume.
+  data['value'] = data['price'] * data['amount']
 #+END_SRC
 
-#+RESULTS[ccb0778bb6537947c8175c14485cf8c1ee808cb3]: get-raw-data-array
+#+RESULTS[d9cb8bb2736965c5557b5898df6c42850da2a784]: get-raw-data-array
 
+#+NAME: summarize-data
+#+BEGIN_SRC python
+  
+  # vwap = volume-weighted-average price
+  # I want some vwap's to look at ... per minute, per hour, per day.
+  minute_vwap = data.value.resample('1min', how='sum') / data.amount.resample('1min', how='sum')
+  hourly_vwap = data.value.resample('H', how='sum') / data.amount.resample('H', how='sum')
+  daily_vwap = data.value.resample('D', how='sum') / data.amount.resample('D', how='sum')
+  
+  # There are missing values in the previous (when a minute/hour/day goes by with no trades).
+  # Sometimes it'll be nice to have time series data without missing values ... in which case, just
+  # fill forward from the last available data point.
+  minute_vwap_f = minute_vwap.fillna(method='ffill')
+  hourly_vwap_f = hourly_vwap.fillna(method='ffill')
+  daily_vwap_f = daily_vwap.fillna(method='ffill')
+#+END_SRC
+
+#+RESULTS[9b7544db112ed1349ebfe59c66554081bda3ecb4]: summarize-data
+
+#+NAME: show-simple-plot
+#+BEGIN_SRC python
+  
+  # Minute xcorr takes too long, and hourly / daily look the same.  So, daily for presentation.
+  autocorrelation_plot(daily_vwap_f)
+  pyplot.show()
+#+END_SRC
+
+#+RESULTS[e8bc120a4b4d444b45d24670508693061bf662ca]: show-simple-plot
+: Axes(0.125,0.1;0.775x0.8)
 
 * File Local Variables						   :noexport:
 
