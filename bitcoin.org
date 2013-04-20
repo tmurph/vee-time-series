@@ -172,6 +172,28 @@ Evaluate this code block to update the report.
 #+RESULTS[e8bc120a4b4d444b45d24670508693061bf662ca]: show-simple-plot
 : Axes(0.125,0.1;0.775x0.8)
 
+#+NAME: def-difference
+#+BEGIN_SRC python
+  
+  # That acf looks ugly.  Let's difference the data until it looks nice.
+  def difference(ts):
+      return (ts - ts.shift())[1:]
+#+END_SRC
+
+#+RESULTS: def-difference
+
+#+NAME: show-difference-plot
+#+BEGIN_SRC python
+  
+  first_diff = difference(daily_vwap_f)
+  
+  autocorrelation_plot(first_diff)
+  pyplot.show()
+#+END_SRC
+
+#+RESULTS: show-difference-plot
+: Axes(0.125,0.1;0.775x0.8)
+
 * File Local Variables						   :noexport:
 
 # Local Variables:
