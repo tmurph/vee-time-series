@@ -104,6 +104,7 @@ Evaluate this code block to update the report.
 ** Python
 :PROPERTIES:
 :session:  *Python-Bitcoin*
+:cache:    no
 :END:
 
 #+NAME: declare-imports
