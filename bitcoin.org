@@ -183,6 +183,47 @@ Evaluate this code block to update the report.
 
 #+RESULTS: def-difference
 
+#+NAME: def-partial-autocorr-plot
+#+BEGIN_SRC python
+  
+  def partial_autocorrelation_plot(series, nlags=40, ax=None):
+      """Partial autocorrelation plot for time series.
+      Modelled heavily on Pandas' autocorrelation_plot function.
+  
+      Parameters:
+      -----------
+      series: Time series
+      nlags: Number of pacf datapoints to calculate, optional (default 40)
+      ax: Matplotlib axis object, optional
+  
+      Returns:
+      -----------
+      ax: Matplotlib axis object
+      """
+      import matplotlib.pyplot as plt
+      import statsmodels.tsa.api as sm
+      n = len(series)
+      data = np.asarray(series)
+      if ax is None:
+          ax = plt.gca(xlim=(1, nlags), ylim=(-1.0, 1.0))
+      x = np.arange(nlags) + 1
+      y = sm.pacf_yw(data, nlags)[1:]
+      z95 = 1.959963984540054
+      z99 = 2.5758293035489004
+      ax.axhline(y=z99 / np.sqrt(n), linestyle='--', color='grey')
+      ax.axhline(y=z95 / np.sqrt(n), color='grey')
+      ax.axhline(y=0.0, color='black')
+      ax.axhline(y=-z95 / np.sqrt(n), color='grey')
+      ax.axhline(y=-z99 / np.sqrt(n), linestyle='--', color='grey')
+      ax.set_xlabel("Order")
+      ax.set_ylabel("Partial Autocorrelation")
+      ax.plot(x, y)
+      ax.grid()
+      return ax
+#+END_SRC
+
+#+RESULTS: def-partial-autocorr-plot
+
 #+NAME: show-difference-plot
 #+BEGIN_SRC python
   
