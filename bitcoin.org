@@ -229,12 +229,28 @@ Evaluate this code block to update the report.
   
   first_diff = difference(daily_vwap_f)
   
-  pdplt.autocorrelation_plot(first_diff)
-  plt.show()
+  fig, axes = plt.subplots(nrows=2, ncols=1)
+  pdplt.autocorrelation_plot(first_diff, ax=axes[0])
+  partial_autocorrelation_plot(first_diff, ax=axes[1])
+  fig.show()
 #+END_SRC
 
 #+RESULTS: show-difference-plot
-: Axes(0.125,0.1;0.775x0.8)
+: Axes(0.125,0.1;0.775x0.363636)
+
+#+NAME show-second-difference-plot
+#+BEGIN_SRC python
+  
+  second_diff = difference(first_diff)
+  
+  fig, axes = plt.subplots(nrows=2, ncols=1)
+  pdplt.autocorrelation_plot(second_diff, ax=axes[0])
+  partial_autocorrelation_plot(second_diff, ax=axes[1])
+  fig.show()
+#+END_SRC
+
+#+RESULTS:
+: Axes(0.125,0.1;0.775x0.363636)
 
 * File Local Variables						   :noexport:
 
