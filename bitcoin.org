@@ -82,11 +82,11 @@ Evaluate this code block to update the report.
   datadir := data
   datafiles := bitcoincharts-mtgoxUSD-0-$(2013-01-01)-trades.csv
   
-  all : $(datadir)/$(datafiles)
+  all : $(addprefix $(datadir)/,$(datafiles))
   
   clean :
   
-  $(datadir)/$(datafiles) :
+  $(datadir)/bitcoincharts-mtgoxUSD-0-$(2013-01-01)-trades.csv :
   > touch $(datadir)
   > curl -C - "http://bitcoincharts.com/t/trades.csv?symbol=mtgoxUSD&start=0&end=$(2013-01-01)" -o $@
   
@@ -147,17 +147,11 @@ Evaluate this code block to update the report.
 #+BEGIN_SRC python
   
   # vwap = volume-weighted-average price
-  # I want some vwap's to look at ... per minute, per hour, per day.
-  minute_vwap = data.value.resample('1min', how='sum') / data.amount.resample('1min', how='sum')
-  hourly_vwap = data.value.resample('H', how='sum') / data.amount.resample('H', how='sum')
+  # Daily resolution is good enough for these purposes.
   daily_vwap = data.value.resample('D', how='sum') / data.amount.resample('D', how='sum')
   
-  # There are missing values in the previous (when a minute/hour/day goes by with no trades).
-  # Sometimes it'll be nice to have time series data without missing values ... in which case, just
-  # fill forward from the last available data point.
-  minute_vwap_f = minute_vwap.fillna(method='ffill')
-  hourly_vwap_f = hourly_vwap.fillna(method='ffill')
-  daily_vwap_f = daily_vwap.fillna(method='ffill')
+  # There are some crazy values in the early days (::cough:: July 2011 ::cough::) so narrow our scope.
+  daily_vwap_s = daily_vwap['2012-01-01':'2013-01-01']
 #+END_SRC
 
 #+RESULTS[9b7544db112ed1349ebfe59c66554081bda3ecb4]: summarize-data
@@ -166,7 +160,7 @@ Evaluate this code block to update the report.
 #+BEGIN_SRC python
   
   # Minute xcorr takes too long, and hourly / daily look the same.  So, daily for presentation.
-  pdplt.autocorrelation_plot(daily_vwap_f)
+  pdplt.autocorrelation_plot(daily_vwap_s)
   plt.show()
 #+END_SRC
 
@@ -227,7 +221,7 @@ Evaluate this code block to update the report.
 #+NAME: show-difference-plot
 #+BEGIN_SRC python
   
-  first_diff = difference(daily_vwap_f)
+  first_diff = difference(daily_vwap_s)
   
   fig, axes = plt.subplots(nrows=2, ncols=1)
   pdplt.autocorrelation_plot(first_diff, ax=axes[0])
