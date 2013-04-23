@@ -146,11 +146,16 @@ Evaluate this code block to update the report.
 #+NAME: summarize-data
 #+BEGIN_SRC python
   
-  # vwap = volume-weighted-average price
-  # Daily resolution is good enough for these purposes.
-  daily_vwap = data.value.resample('D', how='sum') / data.amount.resample('D', how='sum')
+  # vwap = volume-weighted-average price.  Daily resolution is good enough
+  # for these purposes.
+  daily_value = data.value.resample('D', how='sum')
+  daily_amount = data.amount.resample('D', how='sum')
+  daily_vwap = daily_value / daily_amount
   
-  # There are some crazy values in the early days (::cough:: July 2011 ::cough::) so narrow our scope.
+  # There are some crazy values in the early days (July 2011) so narrow
+  # our scope.  NOTE: If we were aiming to build a prediction model, this
+  # could be questionable.  Since we're doing this project for pedagogical
+  # reasons, however, it's okay.
   daily_vwap_s = daily_vwap['2012-01-01':'2013-01-01']
 #+END_SRC
 
@@ -159,7 +164,8 @@ Evaluate this code block to update the report.
 #+NAME: show-simple-plot
 #+BEGIN_SRC python
   
-  # Minute xcorr takes too long, and hourly / daily look the same.  So, daily for presentation.
+  # The autocorrelation plot shows that we're not dealing with a
+  # stationary series (surprise!)
   pdplt.autocorrelation_plot(daily_vwap_s)
   plt.show()
 #+END_SRC
