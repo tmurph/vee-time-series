@@ -255,7 +255,6 @@ Evaluate this code block to update the report.
 * File Local Variables						   :noexport:
 
 # Local Variables:
-# fill-column: 72
 # org-confirm-babel-evaluate: nil
 # End:
 
