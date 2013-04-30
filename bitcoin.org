@@ -122,7 +122,7 @@ Evaluate this code block to update the report.
   import numpy as np
   import pandas as pd
   import pandas.tools.plotting as pdplt
-  import statsmodels.tsa.api as sm
+  import statsmodels.api as sm
   # import math
   from datetime import datetime
 #+END_SRC
@@ -201,13 +201,13 @@ Evaluate this code block to update the report.
       ax: Matplotlib axis object
       """
       import matplotlib.pyplot as plt
-      import statsmodels.tsa.api as sm
+      import statsmodels.api as sm
       n = len(series)
       data = np.asarray(series)
       if ax is None:
           ax = plt.gca(xlim=(1, nlags), ylim=(-1.0, 1.0))
       x = np.arange(nlags) + 1
-      y = sm.pacf_yw(data, nlags)[1:]
+      y = sm.tsa.pacf_yw(data, nlags)[1:]
       z95 = 1.959963984540054
       z99 = 2.5758293035489004
       ax.axhline(y=z99 / np.sqrt(n), linestyle='--', color='grey')
@@ -232,7 +232,7 @@ Evaluate this code block to update the report.
   fig, axes = plt.subplots(nrows=2, ncols=1)
   pdplt.autocorrelation_plot(first_diff, ax=axes[0])
   partial_autocorrelation_plot(first_diff, ax=axes[1])
-  fig.show()
+  plt.show()
 #+END_SRC
 
 #+RESULTS: show-difference-plot
@@ -246,7 +246,7 @@ Evaluate this code block to update the report.
   fig, axes = plt.subplots(nrows=2, ncols=1)
   pdplt.autocorrelation_plot(second_diff, ax=axes[0])
   partial_autocorrelation_plot(second_diff, ax=axes[1])
-  fig.show()
+  plt.show()
 #+END_SRC
 
 #+RESULTS:
