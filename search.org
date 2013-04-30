@@ -147,55 +147,13 @@ Evaluate this code block to update the report.
 #+BEGIN_SRC python :var filename="data/scrubbed-report.csv"
   
   # Read in lines from the data file.
-  parse = lambda x: datetime.fromtimestamp(int(x))
-  data = pd.read_csv(filename, names=['unixtime', 'price', 'amount'],
-                     index_col='unixtime', date_parser=parse)
-  
-  # Add total value of a trade = price * volume.
-  data['value'] = data['price'] * data['amount']
+  data = pd.read_csv(filename, index_col='Week', parse_dates=True,
+                     date_parser=pd.to_datetime)
+  data = data.dropna().asfreq('W')
+  data = np.log(data)
 #+END_SRC
 
 #+RESULTS[d9cb8bb2736965c5557b5898df6c42850da2a784]: get-raw-data-array
-
-#+NAME: summarize-data
-#+BEGIN_SRC python
-  
-  # vwap = volume-weighted-average price.  Daily resolution is good enough
-  # for these purposes.
-  daily_value = data.value.resample('D', how='sum')
-  daily_amount = data.amount.resample('D', how='sum')
-  daily_vwap = daily_value / daily_amount
-  
-  # There are some crazy values in the early days (July 2011) so narrow
-  # our scope.  NOTE: If we were aiming to build a prediction model, this
-  # could be questionable.  Since we're doing this project for pedagogical
-  # reasons, however, it's okay.
-  daily_vwap_s = daily_vwap['2012-01-01':'2013-01-01']
-#+END_SRC
-
-#+RESULTS[9b7544db112ed1349ebfe59c66554081bda3ecb4]: summarize-data
-
-#+NAME: show-simple-plot
-#+BEGIN_SRC python
-  
-  # The autocorrelation plot shows that we're not dealing with a
-  # stationary series (surprise!)
-  pdplt.autocorrelation_plot(daily_vwap_s)
-  plt.show()
-#+END_SRC
-
-#+RESULTS[e8bc120a4b4d444b45d24670508693061bf662ca]: show-simple-plot
-: Axes(0.125,0.1;0.775x0.8)
-
-#+NAME: def-difference
-#+BEGIN_SRC python
-  
-  # Let's difference the data until it looks nice.
-  def difference(ts, periods=1):
-      return (ts - ts.shift(periods=periods))[periods:]
-#+END_SRC
-
-#+RESULTS: def-difference
 
 #+NAME: def-partial-autocorr-plot
 #+BEGIN_SRC python
@@ -221,7 +179,7 @@ Evaluate this code block to update the report.
       if ax is None:
           ax = plt.gca(xlim=(1, nlags), ylim=(-1.0, 1.0))
       x = np.arange(nlags) + 1
-      y = sm.tsa.pacf_yw(data, nlags)[1:]
+      y = sm.tsa.pacf(data, nlags)[1:]
       z95 = 1.959963984540054
       z99 = 2.5758293035489004
       ax.axhline(y=z99 / np.sqrt(n), linestyle='--', color='grey')
@@ -238,10 +196,33 @@ Evaluate this code block to update the report.
 
 #+RESULTS: def-partial-autocorr-plot
 
+#+NAME: show-simple-plot
+#+BEGIN_SRC python
+  
+  # The (p)acf plots show that we're not dealing with a stationary series
+  fig, axes = plt.subplots(nrows=2, ncols=1)
+  pdplt.autocorrelation_plot(data, ax=axes[0])
+  partial_autocorrelation_plot(data, ax=axes[1])
+  plt.show()
+#+END_SRC
+
+#+RESULTS[e8bc120a4b4d444b45d24670508693061bf662ca]: show-simple-plot
+: Axes(0.125,0.1;0.775x0.363636)
+
+#+NAME: def-difference
+#+BEGIN_SRC python
+  
+  # Let's difference the data until it looks nice.
+  def difference(ts, periods=1):
+      return (ts - ts.shift(periods=periods))[periods:]
+#+END_SRC
+
+#+RESULTS: def-difference
+
 #+NAME: show-difference-plot
 #+BEGIN_SRC python
   
-  first_diff = difference(daily_vwap_s)
+  first_diff = difference(data)
   
   fig, axes = plt.subplots(nrows=2, ncols=1)
   pdplt.autocorrelation_plot(first_diff, ax=axes[0])
@@ -252,14 +233,29 @@ Evaluate this code block to update the report.
 #+RESULTS: show-difference-plot
 : Axes(0.125,0.1;0.775x0.363636)
 
-#+NAME show-second-difference-plot
+#+NAME show-annual-diff-plot
 #+BEGIN_SRC python
   
-  second_diff = difference(first_diff)
+  annual_diff = difference(data, periods=52)
   
   fig, axes = plt.subplots(nrows=2, ncols=1)
-  pdplt.autocorrelation_plot(second_diff, ax=axes[0])
-  partial_autocorrelation_plot(second_diff, ax=axes[1])
+  pdplt.autocorrelation_plot(annual_diff, ax=axes[0])
+  partial_autocorrelation_plot(annual_diff, ax=axes[1])
+  plt.show()
+#+END_SRC
+
+#+RESULTS:
+: Axes(0.125,0.1;0.775x0.363636)
+
+#+NAME show-comb-diff-plot
+#+BEGIN_SRC python
+  
+  # comb_diff = difference(first_diff, periods=52)
+  comb_diff = difference(annual_diff)
+  
+  fig, axes = plt.subplots(nrows=2, ncols=1)
+  pdplt.autocorrelation_plot(comb_diff, ax=axes[0])
+  partial_autocorrelation_plot(comb_diff, ax=axes[1])
   plt.show()
 #+END_SRC
 
