@@ -75,35 +75,49 @@ Evaluate this code block to update the report.
   .RECIPEPREFIX = >
   .DELETE_ON_ERROR :
   .PRECIOUS : 
-  .PHONY : all clean
   .DEFAULT : all
   
-  2013-01-01 := 1357016400
   datadir := data
-  datafiles := bitcoincharts-mtgoxUSD-0-$(2013-01-01)-trades.csv
+  datafiles := report.csv scrubbed-report.csv
+  trendurl := https://www.google.com/trends/explore\#q=%22job%20search%22&date=1%2F2004%20109m&cmpt=q
   
+  .PHONY : all
   all : $(addprefix $(datadir)/,$(datafiles))
   
+  .PHONY : clean
   clean :
   
-  $(datadir)/bitcoincharts-mtgoxUSD-0-$(2013-01-01)-trades.csv :
-  > touch $(datadir)
-  > curl -C - "http://bitcoincharts.com/t/trades.csv?symbol=mtgoxUSD&start=0&end=$(2013-01-01)" -o $@
+  $(datadir)/report.csv :
+  > @echo
+  > @echo "Whoops!  Google, as of this writing, does not facilitate automatic"
+  > @echo "downloading of trend reports.  Afraid you'll have to manually locate the"
+  > @echo "\"$(@F)\" file and place it in the \"$(@D)\" folder to continue."
+  > @echo
+  > @echo "Head to:"
+  > @echo "    $(trendurl)"
+  > @echo "and select \"Download as CSV\" to get the \"$(@F)\" file."
+  > @echo
+  > @echo "Be sure to place the file in the \"$(@D)\" folder, or you'll see this again."
+  > @echo
+  > @exit 1
   
-  Makefile : bitcoin.org
-  > emacs -Q --batch --visit=bitcoin.org --eval "(progn \
+  $(datadir)/scrubbed-report.csv : $(datadir)/report.csv
+  > sed -n -e 's/ .*,/,/' -e '5,/^$$/ p' >$@ <$<
+  
+  Makefile : search.org
+  > emacs -Q --batch --visit=search.org --eval "(progn \
   (require 'org) \
   (require 'org-exp) \
   (require 'ob) \
   (require 'ob-tangle) \
   (re-search-forward \"^[ \\t]*#\\\\+begin_src[^\\n]*$@\") \
   (org-babel-tangle t))"
-  > mv -f bitcoin.makefile Makefile
+  > mv -f search.makefile Makefile
 #+END_SRC
 
 ** Python
 :PROPERTIES:
-:session:  *Python-Bitcoin*
+:session:  *Python-Search*
 :cache:    no
 :END:
 
@@ -130,7 +144,7 @@ Evaluate this code block to update the report.
 #+RESULTS[4821df35a8ba49af9f0af5cf7112d1245c733868]: declare-imports
 
 #+NAME: get-raw-data-array
-#+BEGIN_SRC python :var filename="data/bitcoincharts-mtgoxUSD-0-1357016400-trades.csv"
+#+BEGIN_SRC python :var filename="data/scrubbed-report.csv"
   
   # Read in lines from the data file.
   parse = lambda x: datetime.fromtimestamp(int(x))
