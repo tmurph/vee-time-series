@@ -176,9 +176,9 @@ Evaluate this code block to update the report.
 #+NAME: def-difference
 #+BEGIN_SRC python
   
-  # That acf looks ugly.  Let's difference the data until it looks nice.
-  def difference(ts):
-      return (ts - ts.shift())[1:]
+  # Let's difference the data until it looks nice.
+  def difference(ts, periods=1):
+      return (ts - ts.shift(periods=periods))[periods:]
 #+END_SRC
 
 #+RESULTS: def-difference
