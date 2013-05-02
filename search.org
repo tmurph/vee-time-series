@@ -115,145 +115,98 @@ Evaluate this code block to update the report.
   > mv -f search.makefile Makefile
 #+END_SRC
 
-** Python
+** R
 :PROPERTIES:
-:session:  *Python-Search*
-:cache:    no
+:session:  *R-Search*
 :END:
 
-#+NAME: declare-imports
-#+BEGIN_SRC python
-  
-  # # Boo, import Axes3D.  This is some object that pieces of the pyplot
-  # # module need to know about for 3D plotting.  But pyplot can't find it
-  # # by itself.  Needs some handholding - a/k/a a pointless object in the
-  # # global namespace.  Bad, bad, matplotlib.  Not Pythonic.  No biscuit.
-  # from mpl_toolkits.mplot3d import Axes3D
-  import matplotlib.pyplot as plt
-  # from matplotlib import colors
-  # from matplotlib import cm
-  # from scipy import stats
-  import numpy as np
-  import pandas as pd
-  from pandas.tools.plotting import autocorrelation_plot
-  import statsmodels.api as sm
-  # import math
-  from datetime import datetime
+#+NAME read-source-data
+#+BEGIN_SRC R :var filename="data/scrubbed-report.csv" :results silent
+  report <- read.csv(filename, header = TRUE)
 #+END_SRC
 
-#+RESULTS[4821df35a8ba49af9f0af5cf7112d1245c733868]: declare-imports
-
-#+NAME: get-raw-data-array
-#+BEGIN_SRC python :var filename="data/scrubbed-report.csv"
-  
-  # Read in lines from the data file.
-  data = pd.read_csv(filename, index_col='Week', parse_dates=True,
-                     date_parser=pd.to_datetime)
-  data = data.dropna().asfreq('W')
-  data = np.log(data)
+#+NAME plot-data
+#+BEGIN_SRC R :results graphics :file plots/report.png
+  plot.default(report, type = "l")
 #+END_SRC
 
-#+RESULTS[d9cb8bb2736965c5557b5898df6c42850da2a784]: get-raw-data-array
+#+RESULTS[d9029dc9fa815b8254dc3d0f03783b88b98a0b8e]:
+[[file:plots/report.png]]
 
-#+NAME: def-partial-autocorr-plot
-#+BEGIN_SRC python
-  
-  def partial_autocorrelation_plot(series, nlags=40, ax=None):
-      """Partial autocorrelation plot for time series.
-      Modelled heavily on Pandas' autocorrelation_plot function.
-  
-      Parameters:
-      -----------
-      series: Time series
-      nlags: Number of pacf datapoints to calculate, optional (default 40)
-      ax: Matplotlib axis object, optional
-  
-      Returns:
-      -----------
-      ax: Matplotlib axis object
-      """
-      import matplotlib.pyplot as plt
-      import statsmodels.api as sm
-      n = len(series)
-      data = np.asarray(series)
-      if ax is None:
-          ax = plt.gca(xlim=(1, nlags), ylim=(-1.0, 1.0))
-      x = np.arange(nlags) + 1
-      y = sm.tsa.pacf(data, nlags)[1:]
-      z95 = 1.959963984540054
-      z99 = 2.5758293035489004
-      ax.axhline(y=z99 / np.sqrt(n), linestyle='--', color='grey')
-      ax.axhline(y=z95 / np.sqrt(n), color='grey')
-      ax.axhline(y=0.0, color='black')
-      ax.axhline(y=-z95 / np.sqrt(n), color='grey')
-      ax.axhline(y=-z99 / np.sqrt(n), linestyle='--', color='grey')
-      ax.set_xlabel("Order")
-      ax.set_ylabel("Partial Autocorrelation")
-      ax.plot(x, y)
-      ax.grid()
-      return ax
+#+NAME transform-data
+#+BEGIN_SRC R :results graphics :file plots/trans-report.png
+  trans.y = diff(log(report$job.search))
+  plot.default(x = report$Week[2:length(report$Week)], y = trans.y, type = "l")
 #+END_SRC
 
-#+RESULTS: def-partial-autocorr-plot
+#+RESULTS[697488b1a42a0938dfcaf5d38e7b39914824006e]:
+[[file:plots/trans-report.png]]
 
-#+NAME: def-quick-plot
-#+BEGIN_SRC python
-  
-  def quick_plot(data):
-      fig, axes = plt.subplots(nrows=2, ncols=1)
-      autocorrelation_plot(data, ax=axes[0])
-      partial_autocorrelation_plot(data, ax=axes[1])
-      plt.show()
+#+NAME acf-plots
+#+BEGIN_SRC R :results graphics :file plots/acf-plots.png
+  par(mfrow = c(2, 1))
+  acf(trans.y, lag.max = 150)
+  pacf(trans.y, lag.max = 150)
 #+END_SRC
 
-#+RESULTS: def-quick-plot
+#+RESULTS[4a6f1c0f91d773bf752963aa99c24ae44168619c]:
+[[file:plots/acf-plots.png]]
 
-#+NAME: show-simple-plot
-#+BEGIN_SRC python
-  
-  # The (p)acf plots show that we're not dealing with a stationary series
-  quick_plot(data)
+#+NAME full-trans-data
+#+BEGIN_SRC R :results graphics :file plots/full-trans.png
+  ftrans.y = diff(diff(log(report$job.search)), lag = 52)
+  plot.default(x = report$Week[54:length(report$Week)], y = ftrans.y, type = "l")
 #+END_SRC
 
-#+RESULTS[e8bc120a4b4d444b45d24670508693061bf662ca]: show-simple-plot
+#+RESULTS[463fab390551a48ad2f7f4c577182bff6d323fda]:
+[[file:plots/full-trans.png]]
 
-#+NAME: def-difference
-#+BEGIN_SRC python
-  
-  # Let's difference the data until it looks nice.
-  def difference(ts, periods=1):
-      return (ts - ts.shift(periods=periods))[periods:]
+#+NAME: full-acf-plots
+#+BEGIN_SRC R :results graphics :file plots/full-acf-plots.png
+  par(mfrow = c(2, 1))
+  acf(ftrans.y, lag.max = 150)
+  pacf(ftrans.y, lag.max = 150)
 #+END_SRC
 
-#+RESULTS: def-difference
+#+RESULTS[5b12a83fd4c56eacfe7b4f89da9a2d4467ab2899]: full-acf-plots
+[[file:plots/full-acf-plots.png]]
 
-#+NAME: show-difference-plot
-#+BEGIN_SRC python
-  
-  first_diff = difference(data)
-  quick_plot(first_diff)
+#+NAME arima-model
+#+BEGIN_SRC R
+  report.fit <- arima(log(report$job.search),
+                      order=c(0, 1, 1),
+                      seasonal=list(order=c(0, 1, 1), period=52),
+                      include.mean=FALSE)
 #+END_SRC
 
-#+RESULTS: show-difference-plot
+#+RESULTS[ab008945584b2d0edb4fe4e5469f0ee1d6ff7381]:
 
-#+NAME show-annual-diff-plot
-#+BEGIN_SRC python
-  
-  annual_diff = difference(data, periods=52)
-  quick_plot(annual_diff)
+#+NAME arima-coefs
+#+BEGIN_SRC R :colnames yes
+  report.coef <- coef(report.fit)
+  matrix(data = report.coef, ncol = length(report.coef),
+         dimnames = list(c(), names(report.coef)))
 #+END_SRC
 
-#+RESULTS:
+#+RESULTS[4d0a465c877bbe8ffe6757aa3b1098c2c78990c6]:
+|                ma1 |               sma1 |
+|--------------------+--------------------|
+| -0.644653993986152 | -0.232111217226574 |
 
-#+NAME show-comb-diff-plot
-#+BEGIN_SRC python
-  
-  # comb_diff = difference(first_diff, periods=52)
-  comb_diff = difference(annual_diff)
-  quick_plot(comb_diff)
+#+NAME arima-coefs-var
+#+BEGIN_SRC R :colnames yes
+  report.vcov <- vcov(report.fit)
+  vcov.slice <- seq(from = 1, to = length(report.vcov),
+                    length.out = sqrt(length(report.vcov)))
+  report.se <- sqrt(report.vcov[vcov.slice])
+  matrix(data = report.se, ncol = length(report.coef),
+         dimnames = list(c(), names(report.coef)))
 #+END_SRC
 
-#+RESULTS:
+#+RESULTS[409ed0b2828cb9a88aafc651bea683d2934465b0]:
+|                ma1 |               sma1 |
+|--------------------+--------------------|
+| 0.0509935879616838 | 0.0494394720409993 |
 
 * File Local Variables						   :noexport:
 
